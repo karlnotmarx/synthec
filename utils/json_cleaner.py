@@ -2,6 +2,7 @@
 import re, json
 from typing import Any
 
+
 def extract_json_array(text: str) -> str:
     """Return the first JSON array found in text."""
     match = re.search(r"\[.*\]", text, re.DOTALL)
@@ -9,7 +10,6 @@ def extract_json_array(text: str) -> str:
     if not match:
         raise ValueError("No JSON array found in text. LLM ouput could not be parsed.")
     return match.group(0)
-
 
 
 
