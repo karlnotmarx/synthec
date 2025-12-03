@@ -1,0 +1,9 @@
+pandas
+tqdm
+transformers>=4.40.0
+torch
+bitsandbytes
+peft
+python-dotenv
+requests
+jsonschema
