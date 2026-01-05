@@ -12,18 +12,20 @@ load_dotenv()
 if not os.getenv("OPENAI_API_KEY"):
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env.")
 
-
 from synthec.prompts.load_prompt import load_prompt
 from synthec.utils.json_cleaner import safe_load_json
 from synthec.utils.validate_format import validate_json
 
-
-
+PROMPT_FILE = os.getenv("SYNTHEC_PROMPT_FILE", "sentiment_prompt.md")
+TARGET = int(os.getenv("SYNTHEC_TARGET", "50"))
+BATCH_SIZE = int(os.getenv("SYNTHEC_BATCH_SIZE", "5"))
+MODEL_NAME = os.getenv("SYNTHEC_MODEL", "gpt-4o-mini")
+TEMPERATURE = float(os.getenv("SYNTHEC_TEMPERATURE", "0.8"))
 
 
 client = OpenAI()
 
-def call_model(system_prompt, user_prompt, MODEL_NAME ="gpt-4o-mini", temperature=.8):
+def call_model(system_prompt, user_prompt, model_name=MODEL_NAME, temperature=TEMPERATURE):
 
     """
     Call the LLM and return raw text output.
@@ -42,22 +44,19 @@ def call_model(system_prompt, user_prompt, MODEL_NAME ="gpt-4o-mini", temperatur
 
 
 
-def generate_ec():
+def generate_ec(target=TARGET, batch_size=BATCH_SIZE, prompt_file=PROMPT_FILE):
     # Generate Dataset
   
     dataset = []
     failures = []
     i = 0
 
-    BATCH_SIZE= 5
-    TARGET= 50
-
     USER_PROMPT=f"""
-    Generate {BATCH_SIZE} earnings call excerpt paragraphs with a mix of positive, negative and neutral labels.
+    Generate {batch_size} earnings call excerpt paragraphs with a mix of positive, negative and neutral labels.
     Return ONLY JSON array (no markdown).
     """
 
-    SYSTEM_PROMPT=load_prompt("sentiment_prompt.md")
+    SYSTEM_PROMPT=load_prompt(prompt_file)
 
     while i < TARGET:
 
