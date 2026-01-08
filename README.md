@@ -1,4 +1,4 @@
-# Synthec — Synthetic Earnings Call Excerpt Generator
+# SYNTHEC — Synthetic Earnings Call Excerpt Generator
 
 Synthec is a lightweight tool for generating realistic earnings call excerpts with sentiment labels using large language models. It's designed to give you clean, validated synthetic financial text data for experiments, prototypes, and model evaluation.
 
