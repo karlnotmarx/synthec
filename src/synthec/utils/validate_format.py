@@ -8,7 +8,7 @@ SCHEMA = {
     "type": "object",
     "properties": {
       "paragraph": {"type": "string"},
-      "label": {"type": "string", "enum": ["Positive", "Neutral", "Negative"]}
+      "label": {"type": "string", "enum": ["positive", "neutral", "negative"]}
     },
     "required": ["paragraph", "label"]
   }

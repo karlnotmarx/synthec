@@ -1,0 +1,29 @@
+{
+  "dataset_path": "data/synthec_v0.jsonl",
+  "num_samples": 50,
+  "accuracy": 0.78,
+  "labels": [
+    "positive",
+    "negative",
+    "neutral"
+  ],
+  "avg_confidence": 0.9345820844173431,
+  "confusion_matrix": [
+    [
+      17,
+      0,
+      1
+    ],
+    [
+      0,
+      2,
+      10
+    ],
+    [
+      0,
+      0,
+      20
+    ]
+  ],
+  "classification_report": "              precision    recall  f1-score   support\n\n    positive       1.00      0.94      0.97        18\n    negative       1.00      0.17      0.29        12\n     neutral       0.65      1.00      0.78        20\n\n    accuracy                           0.78        50\n   macro avg       0.88      0.70      0.68        50\nweighted avg       0.86      0.78      0.73        50\n"
+}

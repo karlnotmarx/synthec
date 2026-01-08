@@ -22,48 +22,48 @@ Generate realistic earning call excerpt with sentiment label classification.
 ## Ouput format
 [
   {"paragraph": "text",
-  "label": "Positive/Negative/Neutral"},
+  "label": "positive/negative/neutral"},
   {"paragraph": "text",
-  "label": "Positive/Negative/Neutral"},
+  "label": "positive/negative/neutral"},
   {"paragraph": "text",
-  "label": "Positive/Negative/Neutral"}
+  "label": "positive/negative/neutral"}
 ]
 
 ## Few-shot examples
 
-### Example 1 - Positive
+### Example 1 - positive
   {
     "paragraph": "Revenue grew 12% year-over-year to $450 million, driven by strong performance in our cloud services division.",
-    "label": "Positive"
+    "label": "positive"
   }
 
-### Example 2 - Negative
+### Example 2 - negative
   {
     "paragraph": "Operating margins compressed by 230 basis points due to increased investment in R&D and higher logistics costs.",
-    "label": "Negative"
+    "label": "negative"
   }
 
-### Example 3 - Neutral
+### Example 3 - neutral
   {
     "paragraph": "We completed the acquisition of DataTech Solutions in September for $85 million in cash and stock consideration.",
-    "label": "Neutral"
+    "label": "neutral"
   }
 
-### Example 4 - Positive 
+### Example 4 - positive 
   {
     "paragraph": "Based on strong momentum, we're raising full-year revenue guidance to a range of $2.1 to $2.2 billion, up from our previous outlook of $1.95 to $2.05 billion.",
-    "label": "Positive"
+    "label": "positive"
   }
 
-  ### Example 5 - Negative 
+  ### Example 5 - negative 
   {
     "paragraph": "Customer churn increased to 8.3% this quarter from 6.1% in the prior year, primarily driven by pricing pressure in our small business segment.",
-    "label": "Negative"
+    "label": "negative"
   }
 
-  ### Example 6 - Neutral 
+  ### Example 6 - neutral 
   {
     "paragraph": "The board of directors declared a quarterly cash dividend of $0.42 per share, payable on December 15th to shareholders of record as of November 30th.",
-    "label": "Neutral"
+    "label": "neutral"
   }
 """

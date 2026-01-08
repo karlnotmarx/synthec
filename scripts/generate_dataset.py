@@ -1,8 +1,11 @@
+from pathlib import Path
 import os
 import sys
+import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from pathlib import Path
+
 
 PROJECT_ROOT = Path.cwd()   
 sys.path.append(str(PROJECT_ROOT / "src"))
@@ -12,18 +15,19 @@ load_dotenv()
 if not os.getenv("OPENAI_API_KEY"):
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env.")
 
-from synthec.prompts.load_prompt import load_prompt
 from synthec.utils.json_cleaner import safe_load_json
 from synthec.utils.validate_format import validate_json
+from synthec.utils.io import load_prompt, save_jsonl
+
 
 PROMPT_FILE = os.getenv("SYNTHEC_PROMPT_FILE", "sentiment_prompt.md")
 TARGET = int(os.getenv("SYNTHEC_TARGET", "50"))
 BATCH_SIZE = int(os.getenv("SYNTHEC_BATCH_SIZE", "5"))
 MODEL_NAME = os.getenv("SYNTHEC_MODEL", "gpt-4o-mini")
 TEMPERATURE = float(os.getenv("SYNTHEC_TEMPERATURE", "0.8"))
-
-
 client = OpenAI()
+
+
 
 def call_model(system_prompt, user_prompt, model_name=MODEL_NAME, temperature=TEMPERATURE):
 
@@ -81,14 +85,20 @@ def generate_ec(target=TARGET, batch_size=BATCH_SIZE, prompt_file=PROMPT_FILE):
                 i+= 1
 
         except Exception as e:
+
             failures.append({"raw":raw_output,
                             "error": repr(e)})
-
     return dataset, failures
 
 if __name__ == "__main__":
     dataset, failures = generate_ec()
     print(f"Generated {len(dataset)} samples")
     print(f"Logged {len(failures)} failures")
+
+    save_jsonl(dataset, "data/synthec_v0.jsonl")
+    save_jsonl(failures, "data/failures_v0.jsonl")
+    print("Saved results : synthec_v0.jsonl, failures_v0.jsonl")
+
+
 
 
