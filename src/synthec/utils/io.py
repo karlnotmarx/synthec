@@ -1,6 +1,7 @@
 """
 Data loading and saving utilities.
 """
+import csv
 import json
 from pathlib import Path
 
@@ -23,6 +24,29 @@ def load_jsonl(path:Path):
             rows.append(json.loads(line))
     
     return rows
+
+
+def load_csv(path):
+    """
+    Expected csv columns:
+    id,
+    label (positive, negative  or neutral)
+    """
+
+    if not path:
+        raise FileNotFoundError(f"Missing file at {path}.")
+
+    out = {}
+    with path.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if "id" not in reader.fieldnames or "label" not in reader.fieldnames:
+            raise ValueError(f"{path} must contain columns: id,label. Found: {reader.fieldnames}")
+        for r in reader:
+            out[r['id']] = r['label'].lower()
+
+    return out
+
+
 
 
 def save_jsonl(rows, path):

@@ -15,10 +15,12 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 PROJECT_ROOT = Path.cwd()   
 sys.path.append(str(PROJECT_ROOT / "src"))
 
-from synthec.utils.io import load_jsonl
+from synthec.utils.io import load_jsonl, save_jsonl
 
 DATA_PATH = Path("data/synthec_v0.jsonl")
-OUT_PATH = Path("evaluation/reports/finbert_eval.jsonl")
+SUMMARY_PATH = Path("evaluation/reports/finbert_eval_summary.json")
+PREDICTION_PATH = Path("evaluation/reports/finbert_eval.jsonl")
+
 
 
 
@@ -65,7 +67,10 @@ def main():
     y_pred = []
     confidences = []
 
-    for row in rows:
+    fin_pred = []
+
+
+    for i, row in enumerate(rows):
         text = row['paragraph']
         true = row['label']
         pred, confidence = finbert.prediction_one(text)
@@ -74,18 +79,26 @@ def main():
         y_pred.append(pred)
         confidences.append(confidence)
 
+        fin_pred.append({"id" : i, 
+                         "paragraph": text, 
+                         "Finbert_label": pred, 
+                         "true_label": true,
+                         "confidence": confidence
+            }
+        )
+
     
     sentiments = ['positive', 'negative', 'neutral']
     acc = accuracy_score(y_true, y_pred)
     class_report = classification_report(y_true, y_pred, target_names=sentiments, zero_division=0)
-    print(y_true)
-    print(y_pred)
+    # print(y_true)
+    # print(y_pred)
 
     # cm = clean_confusion_matrix(y_true, y_pred, sentiments).to_dict()
     cm = confusion_matrix(y_true, y_pred).tolist()
 
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    out ={
+    SUMMARY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    out_summary ={
         "dataset_path": str(DATA_PATH),
         "num_samples": len(rows),
         "accuracy": acc,
@@ -95,13 +108,14 @@ def main():
         "classification_report": class_report
     }
 
-    OUT_PATH.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    SUMMARY_PATH.write_text(json.dumps(out_summary, indent=2), encoding="utf-8")
+    save_jsonl(fin_pred, PREDICTION_PATH)
 
     print("\n")
     print(f"Accuracy: {acc: .2%}")
     print(f"Confusion matrix: {cm}")
     print(f"Classification report: {class_report}")
-    print(f"\nSaved: {OUT_PATH}")
+    print(f"\nSaved: {SUMMARY_PATH}")
 
 
 
