@@ -1,4 +1,4 @@
-# SYNTHEC —  Financial Sentiment Analysis
+# SYNTHEC — Financial Sentiment Analysis
 
 Production-grade toolkit for generating and evaluating synthetic financial text data. Designed for ML research, model benchmarking, and annotation quality assessment.
 
@@ -9,7 +9,6 @@ SYNTHEC provides two core capabilities:
 1. **Synthetic Data Generation**: Create realistic earnings call excerpts with ground-truth sentiment labels using LLM prompting
 2. **Comprehensive Evaluation Suite**: Measure model performance and inter-annotator agreement with statistical metrics
 
-
 ## Architecture
 ```text
 synthec/
@@ -18,25 +17,26 @@ synthec/
 │   │   └── sentiment_prompt.md
 │   └── utils/                
 │       ├── io.py             
-│       ├── json_cleaner.py   # JSON validation
-│       └── validate_format.py # Output validation
+│       ├── json_cleaner.py   
+│       └── validate_format.py
 ├── scripts/                  
-│   ├── generate_dataset.py   # Synthetic data generation
-│   ├── evaluate_finbert.py   # Model evaluation
-│   └── evaluate_human_vs_finbert.py # Inter-rater reliability
-├── data/                     # Generated datasets
-│   ├── synthec_v0.jsonl      # Synthetic samples
-│   └── failures_v0.jsonl     # Generation failures 
-│   ├── annotations/          # Human labels
+│   ├── generate_dataset.py
+│   ├── evaluate_finbert.py
+│   └── evaluate_human_vs_finbert.py
+├── data/                     
+│   ├── synthec_v0.jsonl      
+│   └── failures_v0.jsonl
+├── evaluation/
+│   ├── annotations/          
 │   │   ├── financial_analyst_a.csv
 │   │   └── financial_analyst_b.csv
-│   └── reports/              # Metrics & results
+│   └── reports/              
 │       ├── finbert_eval_summary.json
 │       ├── finbert_eval.jsonl
-│       └── agreement_eval.jsonl
+│       └── agreement_eval.json
 ├── notebooks/                
 │   └── experiments.ipynb
-├── requirements.txt          # Dependencies
+├── requirements.txt
 └── README.md
 ```
 
@@ -82,12 +82,12 @@ python scripts/evaluate_human_vs_finbert.py
 - `evaluation/annotations/financial_analyst_a.csv`
 - `evaluation/annotations/financial_analyst_b.csv`
 
-**Outputs**: `evaluation/reports/agreement_eval.jsonl`
+**Outputs**: `evaluation/reports/agreement_eval.json`
 
 **Metrics**:
 - Cohen's Kappa (human-human, human-AI)
-- Consensus performance
-- Error analysis with confidence scores
+- Consensus rate and performance
+- Disagreement slices and hard cases
 
 ## Configuration
 
@@ -111,29 +111,17 @@ python scripts/generate_dataset.py
 | `SYNTHEC_TEMPERATURE` | 0.8 | Sampling temperature (0.0-2.0) |
 | `SYNTHEC_PROMPT_FILE` | `sentiment_prompt.md` | Prompt template path |
 
-
-
-
-### Evaluation (`evaluation/`)
-
-**Purpose**: Evaluation inputs and outputs
-
-- **`annotations/`**: Human-labeled data
-  - CSV format: `id,label`
-  - Two annotators for inter-rater reliability
-- **`reports/`**: Evaluation metrics and predictions
-  - Summary JSON: Aggregate metrics
-  - Predictions JSONL: Per-item results
-
-## Metrics
+## Evaluation Metrics
 
 ### Model Performance
+
 - **Accuracy**: Overall correctness
 - **Per-class metrics**: Precision, recall, F1 for {negative, neutral, positive}
 - **Confusion matrix**: Systematic error patterns
 - **Confidence calibration**: Prediction uncertainty vs correctness
 
 ### Annotation Quality
+
 - **Cohen's Kappa (κ)**: Agreement beyond chance
   - κ > 0.80: Almost perfect agreement
   - κ 0.60-0.80: Substantial agreement
@@ -142,6 +130,7 @@ python scripts/generate_dataset.py
 - **Consensus-only accuracy**: Model performance on unambiguous cases
 
 ### Error Analysis
+
 - **Disagreement slices**: Human-human, human-AI mismatches
 - **Low confidence cases**: Model uncertainty indicators (< 60% confidence)
 - **Item-level diagnostics**: Text, labels, predictions, confidence scores
@@ -155,7 +144,7 @@ python scripts/generate_dataset.py
 {"id": 3, "paragraph": "Guidance remains unchanged...", "label": "neutral"}
 ```
 
-### Evaluation Summary (`evaluation/reports/finbert_eval_summary.json`)
+### FinBERT Evaluation Summary (`evaluation/reports/finbert_eval_summary.json`)
 ```json
 {
   "dataset_path": "data/synthec_v0.jsonl",
@@ -168,30 +157,73 @@ python scripts/generate_dataset.py
 }
 ```
 
-### Predictions (`evaluation/reports/finbert_eval.jsonl`)
+### FinBERT Predictions (`evaluation/reports/finbert_eval.jsonl`)
 ```jsonl
-{"id": 1, "text": "...", "true_label": "positive", "predicted_label": "positive", "confidence": 0.95, "correct": true}
-{"id": 2, "text": "...", "true_label": "negative", "predicted_label": "neutral", "confidence": 0.62, "correct": false}
+{"id": 0, "paragraph": "...", "Finbert_label": "positive", "true_label": "positive", "confidence": 0.9578}
+{"id": 1, "paragraph": "...", "Finbert_label": "negative", "true_label": "negative", "confidence": 0.9734}
 ```
 
-### Agreement Analysis (`evaluation/reports/agreement_eval.jsonl`)
+### Agreement Analysis (`evaluation/reports/agreement_eval.json`)
 ```json
 {
-  "n_annotated_overlap": 50,
-  "n_consensus": 42,
-  "kappa": {
-    "human_a_vs_human_b": 0.82,
-    "human_a_vs_finbert": 0.71,
-    "human_b_vs_finbert": 0.73
+  "inputs": {
+    "synthetic_data": "data/synthec_v0.jsonl",
+    "analyst_a_csv": "evaluation/annotations/financial_analyst_a.csv",
+    "analyst_b_csv": "evaluation/annotations/financial_analyst_b.csv",
+    "finbert_predictions": "evaluation/reports/finbert_eval.jsonl"
   },
-  "consensus_only": {
-    "accuracy_finbert_vs_human_consensus": 0.92,
-    "classification_report": "..."
+  "num_items": 50,
+  "labels": {"positive": 0, "negative": 1, "neutral": 2},
+  "analysts_consensus": {
+    "num_consensus": 49,
+    "consensus_rate": 0.98
+  },
+  "cohen_kappa_score": {
+    "analyst_analyst": 0.966,
+    "analyst_a_finbert": 0.818,
+    "analyst_b_finbert": 0.786,
+    "analysts_a&b_finbert": 0.816
+  },
+  "slices": {
+    "disagreements": [
+      {
+        "paragraph": "...",
+        "type": "Human disagreement",
+        "analyst_a": "positive",
+        "analyst_b": "neutral",
+        "finbert": "positive",
+        "finbert confidence": 0.950
+      },
+      {
+        "paragraph": ["...", "..."],
+        "type": "Finbert vs Humans - disagreement",
+        "analyst_a&b": "neutral",
+        "finbert": "positive",
+        "finbert confidence": [0.957, 0.973, ...]
+      }
+    ],
+    "hard_cases_low_confidence": [
+      {
+        "paragraph": "...",
+        "type": "low finbert confidence",
+        "analyst_a": "neutral",
+        "analyst_b": "neutral",
+        "finbert": "neutral",
+        "finbert confidence": 0.507
+      }
+    ]
   }
 }
 ```
 
-### Adding Custom Prompts
+**Key fields explained**:
+- **`analysts_consensus`**: How often human annotators agreed
+- **`cohen_kappa_score`**: Agreement metrics (analyst-analyst, analyst-FinBERT, combined)
+- **`slices.disagreements`**: Cases where humans disagreed or FinBERT mismatched human consensus
+- **`slices.hard_cases_low_confidence`**: Items where FinBERT confidence < 60%
+
+## Adding Custom Prompts
+
 1. Create new prompt file in `src/synthec/prompts/`
 2. Run with: `SYNTHEC_PROMPT_FILE=src/synthec/prompts/your_prompt.md python scripts/generate_dataset.py`
 
