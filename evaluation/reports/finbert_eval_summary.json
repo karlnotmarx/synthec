@@ -1,5 +1,4 @@
 {
-  "dataset_path": "data/synthec_v0.jsonl",
   "num_samples": 50,
   "accuracy": 0.78,
   "labels": [
@@ -8,22 +7,55 @@
     "neutral"
   ],
   "avg_confidence": 0.9345820844173431,
+  "ece": 0.17429789185523986,
   "confusion_matrix": [
     [
+      20,
+      0,
+      0
+    ],
+    [
+      1,
       17,
-      0,
-      1
+      0
     ],
     [
+      10,
       0,
-      2,
-      10
-    ],
-    [
-      0,
-      0,
-      20
+      2
     ]
   ],
-  "classification_report": "              precision    recall  f1-score   support\n\n    positive       1.00      0.94      0.97        18\n    negative       1.00      0.17      0.29        12\n     neutral       0.65      1.00      0.78        20\n\n    accuracy                           0.78        50\n   macro avg       0.88      0.70      0.68        50\nweighted avg       0.86      0.78      0.73        50\n"
+  "classification_report": {
+    "positive": {
+      "precision": 0.6451612903225806,
+      "recall": 1.0,
+      "f1-score": 0.7843137254901961,
+      "support": 20.0
+    },
+    "negative": {
+      "precision": 1.0,
+      "recall": 0.9444444444444444,
+      "f1-score": 0.9714285714285714,
+      "support": 18.0
+    },
+    "neutral": {
+      "precision": 1.0,
+      "recall": 0.16666666666666666,
+      "f1-score": 0.2857142857142857,
+      "support": 12.0
+    },
+    "accuracy": 0.78,
+    "macro avg": {
+      "precision": 0.8817204301075269,
+      "recall": 0.7037037037037037,
+      "f1-score": 0.680485527544351,
+      "support": 50.0
+    },
+    "weighted avg": {
+      "precision": 0.8580645161290323,
+      "recall": 0.78,
+      "f1-score": 0.7320112044817927,
+      "support": 50.0
+    }
+  }
 }
