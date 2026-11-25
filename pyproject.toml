@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthec"
+version = "0.1.0"
+description = "Toolkit for generating and evaluating synthetic financial text data"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+]
+
+[project.optional-dependencies]
+models = [
+    "torch>=2.1",
+    "transformers>=4.40",
+]
+generate = [
+    "openai>=1.0",
+    "python-dotenv>=1.0",
+    "jsonschema>=4.20",
+    "tqdm>=4.66",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+synthec = ["prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

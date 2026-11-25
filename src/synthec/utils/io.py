@@ -10,15 +10,16 @@ def load_prompt(filename: str) -> str:
     """
     Load a prompt from a markdown/text file.
     """
-    project_root = Path.cwd()
-    prompt_path = project_root / "src/synthec/prompts" / filename
+    prompt_path = Path(__file__).resolve().parent.parent / "prompts" / filename
     return prompt_path.read_text(encoding="utf-8")
 
 
-def load_jsonl(path:Path):
+def load_jsonl(path: str | Path):
+    path = Path(path)
     rows = []
     with path.open("r", encoding="utf-8") as f:
         for line in f:
+            line = line.strip()
             if not line:
                 continue
             rows.append(json.loads(line))
