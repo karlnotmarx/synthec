@@ -13,6 +13,60 @@
       "label_b": "neutral"
     }
   ],
+  "gold_vs_consensus": {
+    "n": 49,
+    "agreed": 44,
+    "rate": 0.8979591836734694,
+    "confusion_matrix": [
+      [
+        20,
+        0,
+        0
+      ],
+      [
+        0,
+        18,
+        0
+      ],
+      [
+        5,
+        0,
+        6
+      ]
+    ],
+    "disagreements": [
+      {
+        "id": 2,
+        "gold_label": "neutral",
+        "consensus_label": "positive",
+        "finbert_label": "positive"
+      },
+      {
+        "id": 12,
+        "gold_label": "neutral",
+        "consensus_label": "positive",
+        "finbert_label": "positive"
+      },
+      {
+        "id": 17,
+        "gold_label": "neutral",
+        "consensus_label": "positive",
+        "finbert_label": "positive"
+      },
+      {
+        "id": 22,
+        "gold_label": "neutral",
+        "consensus_label": "positive",
+        "finbert_label": "positive"
+      },
+      {
+        "id": 32,
+        "gold_label": "neutral",
+        "consensus_label": "positive",
+        "finbert_label": "positive"
+      }
+    ]
+  },
   "finbert_vs_consensus": {
     "n": 49,
     "accuracy": 0.8979591836734694,

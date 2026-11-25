@@ -5,9 +5,11 @@ import pytest
 from synthec.agreement import build_agreement_report, consensus
 
 
-def make_inputs(labels_a, labels_b, finbert_labels, confidences=None):
+def make_inputs(labels_a, labels_b, finbert_labels, confidences=None, true_labels=None):
     if confidences is None:
         confidences = [0.9] * len(labels_a)
+    if true_labels is None:
+        true_labels = labels_a
     analyst_a = [
         {"id": index, "paragraph": f"Item {index}", "label": label}
         for index, label in enumerate(labels_a)
@@ -22,8 +24,11 @@ def make_inputs(labels_a, labels_b, finbert_labels, confidences=None):
             "paragraph": f"Item {index}",
             "Finbert_label": label,
             "confidence": confidence,
+            "true_label": true_label,
         }
-        for index, (label, confidence) in enumerate(zip(finbert_labels, confidences))
+        for index, (label, confidence, true_label) in enumerate(
+            zip(finbert_labels, confidences, true_labels)
+        )
     ]
     return analyst_a, analyst_b, finbert
 
@@ -107,9 +112,27 @@ def test_disagreement_records_hold_single_item_paragraph_and_confidence():
         {"id": 3, "paragraph": "Three", "label": "neutral"},
     ]
     finbert = [
-        {"id": 1, "paragraph": "One", "Finbert_label": "negative", "confidence": 0.7},
-        {"id": 2, "paragraph": "Two", "Finbert_label": "positive", "confidence": 0.5},
-        {"id": 3, "paragraph": "Three", "Finbert_label": "neutral", "confidence": 0.9},
+        {
+            "id": 1,
+            "paragraph": "One",
+            "Finbert_label": "negative",
+            "confidence": 0.7,
+            "true_label": "positive",
+        },
+        {
+            "id": 2,
+            "paragraph": "Two",
+            "Finbert_label": "positive",
+            "confidence": 0.5,
+            "true_label": "neutral",
+        },
+        {
+            "id": 3,
+            "paragraph": "Three",
+            "Finbert_label": "neutral",
+            "confidence": 0.9,
+            "true_label": "neutral",
+        },
     ]
 
     report = build_agreement_report(analyst_a, analyst_b, finbert)
@@ -169,3 +192,112 @@ def test_report_is_json_serialisable():
     report = build_agreement_report(analyst_a, analyst_b, finbert)
 
     json.dumps(report)
+
+
+def test_kappa_nan_on_single_class_subset_is_reported_as_null():
+    analyst_a = [
+        {"id": 1, "paragraph": "Item 1", "label": "positive"},
+        {"id": 2, "paragraph": "Item 2", "label": "positive"},
+        {"id": 3, "paragraph": "Item 3", "label": "negative"},
+    ]
+    analyst_b = [
+        {"id": 1, "paragraph": "Item 1", "label": "positive"},
+        {"id": 2, "paragraph": "Item 2", "label": "positive"},
+        {"id": 3, "paragraph": "Item 3", "label": "neutral"},
+    ]
+    finbert = [
+        {
+            "id": 1,
+            "paragraph": "Item 1",
+            "Finbert_label": "positive",
+            "confidence": 0.9,
+            "true_label": "positive",
+        },
+        {
+            "id": 2,
+            "paragraph": "Item 2",
+            "Finbert_label": "positive",
+            "confidence": 0.9,
+            "true_label": "positive",
+        },
+        {
+            "id": 3,
+            "paragraph": "Item 3",
+            "Finbert_label": "neutral",
+            "confidence": 0.5,
+            "true_label": "neutral",
+        },
+    ]
+
+    report = build_agreement_report(analyst_a, analyst_b, finbert)
+
+    assert report["finbert_vs_consensus"]["n"] == 2
+    assert report["finbert_vs_consensus"]["cohen_kappa"] is None
+    assert (
+        json.loads(json.dumps(report))["finbert_vs_consensus"]["cohen_kappa"] is None
+    )
+
+
+def test_gold_vs_consensus_section():
+    analyst_a = [
+        {"id": 1, "paragraph": "One", "label": "positive"},
+        {"id": 2, "paragraph": "Two", "label": "negative"},
+        {"id": 3, "paragraph": "Three", "label": "neutral"},
+        {"id": 4, "paragraph": "Four", "label": "positive"},
+    ]
+    analyst_b = [
+        {"id": 1, "paragraph": "One", "label": "positive"},
+        {"id": 2, "paragraph": "Two", "label": "negative"},
+        {"id": 3, "paragraph": "Three", "label": "neutral"},
+        {"id": 4, "paragraph": "Four", "label": "neutral"},
+    ]
+    finbert = [
+        {
+            "id": 1,
+            "paragraph": "One",
+            "Finbert_label": "positive",
+            "confidence": 0.9,
+            "true_label": "neutral",
+        },
+        {
+            "id": 2,
+            "paragraph": "Two",
+            "Finbert_label": "negative",
+            "confidence": 0.9,
+            "true_label": "negative",
+        },
+        {
+            "id": 3,
+            "paragraph": "Three",
+            "Finbert_label": "neutral",
+            "confidence": 0.9,
+            "true_label": "neutral",
+        },
+        {
+            "id": 4,
+            "paragraph": "Four",
+            "Finbert_label": "positive",
+            "confidence": 0.9,
+            "true_label": "positive",
+        },
+    ]
+
+    report = build_agreement_report(analyst_a, analyst_b, finbert)
+    gold_vs_consensus = report["gold_vs_consensus"]
+
+    assert gold_vs_consensus["n"] == 3
+    assert gold_vs_consensus["agreed"] == 2
+    assert gold_vs_consensus["rate"] == pytest.approx(2 / 3)
+    assert gold_vs_consensus["confusion_matrix"] == [
+        [0, 0, 0],
+        [0, 1, 0],
+        [1, 0, 1],
+    ]
+    assert gold_vs_consensus["disagreements"] == [
+        {
+            "id": 1,
+            "gold_label": "neutral",
+            "consensus_label": "positive",
+            "finbert_label": "positive",
+        }
+    ]

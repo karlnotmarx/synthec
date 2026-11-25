@@ -1,6 +1,8 @@
 """
 Agreement analysis between human annotators and FinBERT predictions.
 """
+import math
+
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -50,6 +52,13 @@ def _paragraph(value):
     return str(value).strip()
 
 
+def _cohen_kappa(y_true, y_pred, labels):
+    kappa = cohen_kappa_score(y_true, y_pred, labels=labels)
+    if math.isnan(kappa):
+        return None
+    return kappa
+
+
 def build_agreement_report(
     analyst_a,
     analyst_b,
@@ -92,6 +101,7 @@ def build_agreement_report(
         a_label = _normalise_label(a_item["label"], allowed)
         b_label = _normalise_label(b_item["label"], allowed)
         f_label = _normalise_label(f_item["Finbert_label"], allowed)
+        gold_label = _normalise_label(f_item["true_label"], allowed)
         confidence = float(f_item["confidence"])
 
         analyst_a_labels.append(a_label)
@@ -101,7 +111,14 @@ def build_agreement_report(
             agreed += 1
             consensus_label = a_label
             consensus_items.append(
-                (f_item["id"], f_item["paragraph"], consensus_label, f_label, confidence)
+                (
+                    f_item["id"],
+                    f_item["paragraph"],
+                    consensus_label,
+                    f_label,
+                    confidence,
+                    gold_label,
+                )
             )
         else:
             consensus_label = "neutral"
@@ -124,7 +141,14 @@ def build_agreement_report(
                 }
             )
 
-    for item_id, paragraph, consensus_label, f_label, confidence in consensus_items:
+    for (
+        item_id,
+        paragraph,
+        consensus_label,
+        f_label,
+        confidence,
+        _gold_label,
+    ) in consensus_items:
         if consensus_label != f_label:
             finbert_disagreements.append(
                 {
@@ -138,16 +162,35 @@ def build_agreement_report(
 
     consensus_labels = [item[2] for item in consensus_items]
     finbert_labels = [item[3] for item in consensus_items]
+    gold_labels = [item[5] for item in consensus_items]
     num_consensus = len(consensus_items)
+
+    gold_disagreements = []
+    for item in consensus_items:
+        item_id, _item_paragraph, consensus_label, f_label, _confidence, gold_label = item
+        if gold_label != consensus_label:
+            gold_disagreements.append(
+                {
+                    "id": item_id,
+                    "gold_label": gold_label,
+                    "consensus_label": consensus_label,
+                    "finbert_label": f_label,
+                }
+            )
 
     if num_consensus:
         finbert_accuracy = accuracy_score(consensus_labels, finbert_labels)
-        finbert_kappa = cohen_kappa_score(
-            consensus_labels, finbert_labels, labels=label_order
+        finbert_kappa = _cohen_kappa(
+            consensus_labels, finbert_labels, label_order
         )
     else:
         finbert_accuracy = 0.0
         finbert_kappa = 0.0
+
+    gold_agreed = sum(
+        gold_label == consensus_label
+        for gold_label, consensus_label in zip(gold_labels, consensus_labels)
+    )
 
     num_items = len(a_by_id)
     report = {
@@ -156,14 +199,21 @@ def build_agreement_report(
             "agreed": agreed,
             "rate": agreed / num_items if num_items else 0.0,
             "cohen_kappa": (
-                cohen_kappa_score(
-                    analyst_a_labels, analyst_b_labels, labels=label_order
-                )
+                _cohen_kappa(analyst_a_labels, analyst_b_labels, label_order)
                 if num_items
                 else 0.0
             ),
         },
         "analyst_disagreements": analyst_disagreements,
+        "gold_vs_consensus": {
+            "n": num_consensus,
+            "agreed": gold_agreed,
+            "rate": gold_agreed / num_consensus if num_consensus else 0.0,
+            "confusion_matrix": confusion_matrix(
+                gold_labels, consensus_labels, labels=label_order
+            ).tolist(),
+            "disagreements": gold_disagreements,
+        },
         "finbert_vs_consensus": {
             "n": num_consensus,
             "accuracy": finbert_accuracy,
